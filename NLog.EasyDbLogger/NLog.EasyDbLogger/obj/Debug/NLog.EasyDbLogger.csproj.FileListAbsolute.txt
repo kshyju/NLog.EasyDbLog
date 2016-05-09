@@ -4,3 +4,4 @@ C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\bin\Debug\NLog.d
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\bin\Debug\NLog.xml
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\obj\Debug\NLog.EasyDbLogger.dll
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\obj\Debug\NLog.EasyDbLogger.pdb
+C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\obj\Debug\NLog.EasyDbLogger.csprojResolveAssemblyReference.cache
