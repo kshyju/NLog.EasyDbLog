@@ -1,52 +1,85 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Data.SqlClient;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using System.Web;
+using Newtonsoft.Json;
 using NLog.Config;
 using NLog.Targets;
 
 namespace NLog.EasyDbLogger
 {
-    [Target("MyFirst")]
+    [Target("EasyDbLoggerTarget")]
     public sealed class EasyDbLoggerTarget : TargetWithLayout
     {
 
         [RequiredParameter]
         public string ApplicationName { get; set; }
 
+
+        //Connnection string name used to write to the db
+
+        [RequiredParameter]
+        public string ConnectionStringName { set; get; }
+
         /// <summary>
         /// How many times we should retry to write it to the db if something went wrong the first time
         /// </summary>
-        public int MaxRetryCount { set; get; }
+        public int MaxRetryCount => 2;
 
         protected override void Write(LogEventInfo logEvent)
         {
+            var error = new Error
+            {
+                ApplicationName = ApplicationName,
+                Type = logEvent.Level.Name,
+                Message = logEvent.Message,
+                Detail = logEvent.Message
+            };
+
             var httpContext = HttpContext.Current;
             if (httpContext != null)
             {
                 var req = httpContext.Request;
-            }
-            string logMessage = this.Layout.Render(logEvent);
 
-            var error = new Error();
-            error.Type = logEvent.Level.Name;
+                error.Host = req.ServerVariables["HOST"] ?? "";
+                error.IPAddress = req.ServerVariables.GetRemoteIP();
 
-            if (httpContext != null)
-            {
-                var req = httpContext.Request;
                 error.HTTPMethod = req.HttpMethod;
                 error.Url = req.RawUrl;
 
             }
 
-            errorQueue.Enqueue(error);
+            if (logEvent.Exception != null)
+            {
+                error.Source = logEvent.Exception.Source;
+                error.Message = logEvent.Exception.Message;
+                error.Detail = logEvent.Exception.GetAllInnerExceptionsAsString();
 
+                if (logEvent.Exception.Data.Values.Count > 0)
+                {
+                    Dictionary<string,string> customData=new Dictionary<string, string>();
+                    foreach (var data in logEvent.Exception.Data.Keys)
+                    {
+                        customData.Add(data.ToString(), logEvent.Exception.Data[data].ToString());
+                    }
+                    error.CustomData = customData;
+                }
+                
+            }
+
+            if (error.GetHash() != null)
+            {
+                error.ErrorHash = error.GetHash().Value;
+            }
+           
+            error.FullJson = JsonConvert.SerializeObject(error);
             WriteToTable(error);
         }
+
 
 
         readonly ConcurrentQueue<Error> errorQueue = new ConcurrentQueue<Error>();
@@ -58,7 +91,8 @@ namespace NLog.EasyDbLogger
                 var q = @"Insert Into Exceptions (GUID,
                                                 ApplicationName, 
                                                 MachineName,
-                                                CreationDate, 
+                                                CreationDate,
+                                                IsProtected, 
                                                 Type,                                               
                                                 Host,
                                                 Url,
@@ -66,12 +100,11 @@ namespace NLog.EasyDbLogger
                                                 IPAddress, 
                                                 Source, 
                                                 Message,
-                                                Detail,                                                
-                                                SQL, 
+                                                Detail,
                                                 FullJson, 
-                                                ErrorHash, DuplicateCount)
-Values (@GUID, @ApplicationName, @MachineName, @CreationDate, @Type, @IsProtected, @Host, @Url, @HTTPMethod, @IPAddress, @Source,
-@Message, @Detail, @SQL, @FullJson, @ErrorHash, @DuplicateCount)";
+                                                ErrorHash, DuplicateCount,SQL)
+Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type, @Host, @Url, @HTTPMethod, @IPAddress, @Source,
+@Message, @Detail,  @FullJson, @ErrorHash, @DuplicateCount,@SQL)";
 
 
 
@@ -79,26 +112,26 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate, @Type, @IsProtecte
                     System.Configuration.ConfigurationManager.ConnectionStrings["NLogDb"].ConnectionString as string;
                 using (var conn = new SqlConnection(connStr))
                 {
-                    // var q = "INSERT INTO  Log(Application,Logged,Level,Message) VALUES(@app,@date,@level,@msg)";
+
                     using (var cmd = new SqlCommand(q, conn))
                     {
                         cmd.Parameters.AddWithValue("@GUID", Guid.NewGuid());
                         cmd.Parameters.AddWithValue("@ApplicationName", error.ApplicationName.Truncate(50));
-                        cmd.Parameters.AddWithValue("@MachineName", error.MachineName);
+                        cmd.Parameters.AddWithValue("@MachineName", error.MachineName.Truncate(50));
                         cmd.Parameters.AddWithValue("@CreationDate", DateTime.UtcNow);
-                        cmd.Parameters.AddWithValue("@Type", error.Type);
+                        cmd.Parameters.AddWithValue("@Type", error.Type.Truncate(100));
                         cmd.Parameters.AddWithValue("@IsProtected", false);
-                        cmd.Parameters.AddWithValue("@Host", error.Host);
-                        cmd.Parameters.AddWithValue("@Url", error.Url);
+                        cmd.Parameters.AddWithValue("@Host", error.Host.Truncate(100));
+                        cmd.Parameters.AddWithValue("@Url", error.Url.Truncate(500));
                         cmd.Parameters.AddWithValue("@HTTPMethod", error.HTTPMethod);
                         cmd.Parameters.AddWithValue("@IPAddress", error.IPAddress);
                         cmd.Parameters.AddWithValue("@Source", error.Source);
-                        cmd.Parameters.AddWithValue("@Message", error.Message);
+                        cmd.Parameters.AddWithValue("@Message", error.Message.Truncate(1000));
                         cmd.Parameters.AddWithValue("@Detail", error.Detail);
-                        cmd.Parameters.AddWithValue("@SQL", error.SQL);
                         cmd.Parameters.AddWithValue("@FullJson", error.FullJson);
                         cmd.Parameters.AddWithValue("@ErrorHash", error.ErrorHash);
-                        cmd.Parameters.AddWithValue("@DuplicateCount", error.DuplicateCount);
+                        cmd.Parameters.AddWithValue("@DuplicateCount", 1);
+                        cmd.Parameters.AddWithValue("@SQL", (object)error.SQL ?? DBNull.Value);
 
                         conn.Open();
                         cmd.ExecuteNonQuery();
@@ -109,7 +142,11 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate, @Type, @IsProtecte
             {
 
                 error.RetryCount++;
-                AddToQueue(error);
+                if (error.RetryCount < MaxRetryCount)
+                {
+                    AddToQueue(error);
+                }
+                //SWALLOW :(
                 // throw ex;
             }
         }
@@ -130,12 +167,12 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate, @Type, @IsProtecte
             while (!errorQueue.IsEmpty)
             {
                 Error e;
-                
+
                 if (!errorQueue.TryDequeue(out e)) return;
 
                 try
                 {
-                   WriteToTable(e);
+                    WriteToTable(e);
                 }
                 catch
                 {
@@ -147,33 +184,82 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate, @Type, @IsProtecte
                     }
                     else
                     {
-                        
+
                     }
                 }
             }
         }
     }
 
-    public static class StringExtensions
+    //Thanks to StackExchange.Exceptional(https://github.com/NickCraver/StackExchange.Exceptional). Copied some code from that as we are trying to add records to the same table.
+
+    public static class Extensions
     {
+        //Thanks to StackExchange.Exceptional(https://github.com/NickCraver/StackExchange.Exceptional). Copied from that repo.
+
+        private static readonly Regex IPv4Regex = new Regex(@"\b([0-9]{1,3}\.){3}[0-9]{1,3}$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        public const string UnknownIP = "0.0.0.0";
+
+        private static bool IsPrivateIP(string s)
+        {
+            return (s.StartsWith("192.168.") || s.StartsWith("10.") || s.StartsWith("127.0.0."));
+        }
+
+        public static bool HasValue(this string s)
+        {
+            return !IsNullOrEmpty(s);
+        }
+        public static bool IsNullOrEmpty(this string s)
+        {
+            return String.IsNullOrEmpty(s);
+        }
+        public static string GetRemoteIP(this NameValueCollection serverVariables)
+        {
+            var ip = serverVariables["REMOTE_ADDR"]; // could be a proxy -- beware
+            var ipForwarded = serverVariables["HTTP_X_FORWARDED_FOR"];
+
+            // check if we were forwarded from a proxy
+            if (ipForwarded.HasValue())
+            {
+                ipForwarded = IPv4Regex.Match(ipForwarded).Value;
+                if (ipForwarded.HasValue() && !IsPrivateIP(ipForwarded))
+                    ip = ipForwarded;
+            }
+
+            return ip.HasValue() ? ip : UnknownIP;
+        }
         public static string Truncate(this string s, int maxLength)
         {
-            return (string.IsNullOrEmpty(s) && s.Length > maxLength) ? s.Remove(maxLength) : s;
+            return (String.IsNullOrEmpty(s) && s.Length > maxLength) ? s.Remove(maxLength) : s;
+        }
+
+        public static string GetAllInnerExceptionsAsString(this Exception ex)
+        {
+            StringBuilder innerExceptionText = new StringBuilder();
+            var exception = ex;
+            innerExceptionText.Append(exception);
+            while (exception.InnerException != null)
+            {
+                innerExceptionText.Append(exception.InnerException);
+                exception = exception.InnerException;
+            }
+            return innerExceptionText.ToString();
         }
     }
 
+    [Serializable]
     internal class Error
     {
         public int RetryCount { internal set; get; }
         public long Id { internal set; get; }
         public Guid Guid { internal set; get; }
         public string ApplicationName { internal set; get; }
-        public string MachineName { internal set; get; }
+        public string MachineName => Environment.MachineName;
         public DateTime CreationDate { get; internal set; }
-        public string Type { set; get; }
-        public string Host { set; get; }
-        public string Url { set; get; }
-        public string HTTPMethod { set; get; }
+        public string Type { internal set; get; }
+        public string Host { internal set; get; }
+        public string Url { internal set; get; }
+        public string HTTPMethod { internal set; get; }
         public string IPAddress { set; get; }
         public string Source { set; get; }
 
@@ -188,5 +274,48 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate, @Type, @IsProtecte
         public int ErrorHash { set; get; }
 
         public int DuplicateCount { set; get; }
+
+        public Dictionary<string, string> CustomData { get; set; }
+
+        /// <summary>
+        /// Gets a unique-enough hash of this error.  Stored as a quick comparison mechanism to rollup duplicate errors.
+        /// </summary>
+        /// <returns>"Unique" hash for this error</returns>
+        public int? GetHash()
+        {
+            if (!Detail.HasValue()) return null;
+
+            var result = Detail.GetHashCode();
+            if (MachineName.HasValue())
+                result = (result * 397) ^ MachineName.GetHashCode();
+
+            return result;
+        }
+
+        internal void AddFromData(Exception exception)
+        {
+            if (exception.Data == null) return;
+
+            // Historical special case
+            if (exception.Data.Contains("SQL"))
+                SQL = exception.Data["SQL"] as string;
+
+            var se = exception as SqlException;
+            if (se != null)
+            {
+                if (CustomData == null)
+                    CustomData = new Dictionary<string, string>();
+
+                CustomData["SQL-Server"] = se.Server;
+                CustomData["SQL-ErrorNumber"] = se.Number.ToString();
+                CustomData["SQL-LineNumber"] = se.LineNumber.ToString();
+
+                if (se.Procedure.HasValue())
+                {
+                    CustomData["SQL-Procedure"] = se.Procedure;
+                }
+            }
+
+        }
     }
 }
