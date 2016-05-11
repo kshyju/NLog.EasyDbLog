@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
@@ -55,16 +56,18 @@ namespace NLog.EasyDbLogger
                 error.Url = req.RawUrl;
 
 
-                error.RequestHeaders = new NameValueCollection(req.Headers.Count);
-                foreach (var header in req.Headers.AllKeys)
-                {
-                    // Cookies are handled above, no need to repeat
-                    if (string.Compare(header, "Cookie", StringComparison.OrdinalIgnoreCase) == 0)
-                        continue;
+                SetContextProperties(httpContext,error);
 
-                    if (req.Headers[header] != null)
-                        error.RequestHeaders[header] = req.Headers[header];
-                }
+                //error.RequestHeaders = new NameValueCollection(req.Headers.Count);
+                //foreach (var header in req.Headers.AllKeys)
+                //{
+                //    // Cookies are handled above, no need to repeat
+                //    if (string.Compare(header, "Cookie", StringComparison.OrdinalIgnoreCase) == 0)
+                //        continue;
+
+                //    if (req.Headers[header] != null)
+                //        error.RequestHeaders[header] = req.Headers[header];
+                //}
 
             }
 
@@ -98,6 +101,60 @@ namespace NLog.EasyDbLogger
             WriteToTable(error);
         }
 
+        /// <summary>
+        /// Sets Error properties pulled from HttpContext, if present
+        /// </summary>
+        /// <param name="context">The HttpContext related to the request</param>
+        private void SetContextProperties(HttpContext context,Error error)
+        {
+            if (context == null) return;
+
+            var request = context.Request;
+
+            Func<Func<HttpRequest, NameValueCollection>, NameValueCollection> tryGetCollection;
+            tryGetCollection = getter =>
+            {
+                try
+                {
+                    return new NameValueCollection(getter(request));
+                }
+                catch (HttpRequestValidationException e)
+                {
+                    Trace.WriteLine("Error parsing collection: " + e.Message);
+                    return new NameValueCollection { { "CollectionFetchError", e.Message } };
+                }
+            };
+
+            error.ServerVariables = tryGetCollection(r => r.ServerVariables);
+            error.QueryString = tryGetCollection(r => r.QueryString);
+            error.Form = tryGetCollection(r => r.Form);
+           
+
+            try
+            {
+                error.Cookies = new NameValueCollection(request.Cookies.Count);
+                for (var i = 0; i < request.Cookies.Count; i++)
+                {
+                    var name = request.Cookies[i].Name;
+                    error.Cookies.Add(name,request.Cookies[i].Value);
+                }
+            }
+            catch (HttpRequestValidationException e)
+            {
+                Trace.WriteLine("Error parsing cookie collection: " + e.Message);
+            }
+
+            error.RequestHeaders = new NameValueCollection(request.Headers.Count);
+            foreach (var header in request.Headers.AllKeys)
+            {
+                // Cookies are handled above, no need to repeat
+                if (string.Compare(header, "Cookie", StringComparison.OrdinalIgnoreCase) == 0)
+                    continue;
+
+                if (request.Headers[header] != null)
+                    error.RequestHeaders[header] = request.Headers[header];
+            }
+        }
 
 
         readonly ConcurrentQueue<Error> errorQueue = new ConcurrentQueue<Error>();
@@ -299,6 +356,59 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type
         //  [ScriptIgnore]
         [JsonIgnore]
         public NameValueCollection RequestHeaders { get; set; }
+
+
+        [JsonIgnore]
+        public NameValueCollection ServerVariables { get; set; }
+
+        /// <summary>
+        /// Gets the query string collection for the request
+        /// </summary>
+        [JsonIgnore]
+        public NameValueCollection QueryString { get; set; }
+
+        /// <summary>
+        /// Gets the form collection for the request
+        /// </summary>
+        [JsonIgnore]
+        public NameValueCollection Form { get; set; }
+
+        /// <summary>
+        /// Gets a collection representing the client cookies of the request
+        /// </summary>
+        [JsonIgnore]
+        public NameValueCollection Cookies { get; set; }
+
+        public List<NameValuePair> ServerVariablesSerializable
+        {
+            get { return GetPairs(ServerVariables); }
+            set { ServerVariables = GetNameValueCollection(value); }
+        }
+        /// <summary>
+        /// Variables strictly for JSON serialziation, to maintain non-dictonary behavior
+        /// </summary>
+        public List<NameValuePair> QueryStringSerializable
+        {
+            get { return GetPairs(QueryString); }
+            set { QueryString = GetNameValueCollection(value); }
+        }
+        /// <summary>
+        /// Variables strictly for JSON serialziation, to maintain non-dictonary behavior
+        /// </summary>
+        public List<NameValuePair> FormSerializable
+        {
+            get { return GetPairs(Form); }
+            set { Form = GetNameValueCollection(value); }
+        }
+        /// <summary>
+        /// Variables strictly for JSON serialziation, to maintain non-dictonary behavior
+        /// </summary>
+        public List<NameValuePair> CookiesSerializable
+        {
+            get { return GetPairs(Cookies); }
+            set { Cookies = GetNameValueCollection(value); }
+        }
+
         public List<NameValuePair> RequestHeadersSerializable
         {
             get { return GetPairs(RequestHeaders); }
