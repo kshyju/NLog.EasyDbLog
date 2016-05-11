@@ -37,7 +37,7 @@ namespace NLog.EasyDbLogger
                 ApplicationName = ApplicationName,
                 Type = logEvent.Level.Name,
                 Message = logEvent.Message,
-                Detail = logEvent.Message,
+                Detail = logEvent.FormattedMessage,
                 CreationDate = DateTime.UtcNow,
                 Guid = Guid.NewGuid(),
                 DuplicateCount = 1
@@ -48,7 +48,7 @@ namespace NLog.EasyDbLogger
             {
                 var req = httpContext.Request;
 
-                error.Host = req.ServerVariables["HOST"] ?? "";
+                error.Host = req.ServerVariables["HTTP_HOST"] ?? "";
                 error.IPAddress = req.ServerVariables.GetRemoteIP();
 
                 error.HTTPMethod = req.HttpMethod;
