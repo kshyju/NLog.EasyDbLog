@@ -42,6 +42,7 @@ C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\bin\Mi
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\bin\Microsoft.AI.WindowsServer.xml
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\bin\Microsoft.ApplicationInsights.xml
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.xml
+C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\bin\Newtonsoft.Json.xml
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\bin\NLog.xml
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\bin\System.Web.Helpers.xml
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\bin\System.Web.Mvc.xml
@@ -51,7 +52,6 @@ C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\bin\Sy
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\bin\System.Web.WebPages.Deployment.xml
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\bin\System.Web.WebPages.Razor.xml
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\bin\Antlr3.Runtime.pdb
-C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\bin\Newtonsoft.Json.xml
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\obj\Debug\NLog.EasyDbLogger.SampleMvc.csprojResolveAssemblyReference.cache
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\obj\Debug\NLog.EasyDbLogger.SampleMvc.dll
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\obj\Debug\NLog.EasyDbLogger.SampleMvc.pdb

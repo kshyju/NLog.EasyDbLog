@@ -37,7 +37,10 @@ namespace NLog.EasyDbLogger
                 ApplicationName = ApplicationName,
                 Type = logEvent.Level.Name,
                 Message = logEvent.Message,
-                Detail = logEvent.Message
+                Detail = logEvent.Message,
+                CreationDate = DateTime.UtcNow,
+                Guid = Guid.NewGuid(),
+                DuplicateCount = 1
             };
 
             var httpContext = HttpContext.Current;
@@ -50,6 +53,18 @@ namespace NLog.EasyDbLogger
 
                 error.HTTPMethod = req.HttpMethod;
                 error.Url = req.RawUrl;
+
+
+                error.RequestHeaders = new NameValueCollection(req.Headers.Count);
+                foreach (var header in req.Headers.AllKeys)
+                {
+                    // Cookies are handled above, no need to repeat
+                    if (string.Compare(header, "Cookie", StringComparison.OrdinalIgnoreCase) == 0)
+                        continue;
+
+                    if (req.Headers[header] != null)
+                        error.RequestHeaders[header] = req.Headers[header];
+                }
 
             }
 
@@ -77,6 +92,9 @@ namespace NLog.EasyDbLogger
             }
            
             error.FullJson = JsonConvert.SerializeObject(error);
+
+           
+
             WriteToTable(error);
         }
 
@@ -109,16 +127,16 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type
 
 
                 var connStr =
-                    System.Configuration.ConfigurationManager.ConnectionStrings["NLogDb"].ConnectionString as string;
+                    System.Configuration.ConfigurationManager.ConnectionStrings[ConnectionStringName].ConnectionString as string;
                 using (var conn = new SqlConnection(connStr))
                 {
 
                     using (var cmd = new SqlCommand(q, conn))
                     {
-                        cmd.Parameters.AddWithValue("@GUID", Guid.NewGuid());
+                        cmd.Parameters.AddWithValue("@GUID", error.Guid);
                         cmd.Parameters.AddWithValue("@ApplicationName", error.ApplicationName.Truncate(50));
                         cmd.Parameters.AddWithValue("@MachineName", error.MachineName.Truncate(50));
-                        cmd.Parameters.AddWithValue("@CreationDate", DateTime.UtcNow);
+                        cmd.Parameters.AddWithValue("@CreationDate", error.CreationDate);
                         cmd.Parameters.AddWithValue("@Type", error.Type.Truncate(100));
                         cmd.Parameters.AddWithValue("@IsProtected", false);
                         cmd.Parameters.AddWithValue("@Host", error.Host.Truncate(100));
@@ -130,7 +148,7 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type
                         cmd.Parameters.AddWithValue("@Detail", error.Detail);
                         cmd.Parameters.AddWithValue("@FullJson", error.FullJson);
                         cmd.Parameters.AddWithValue("@ErrorHash", error.ErrorHash);
-                        cmd.Parameters.AddWithValue("@DuplicateCount", 1);
+                        cmd.Parameters.AddWithValue("@DuplicateCount", error.DuplicateCount);
                         cmd.Parameters.AddWithValue("@SQL", (object)error.SQL ?? DBNull.Value);
 
                         conn.Open();
@@ -160,8 +178,7 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type
             DequeAndTryToWrite();
         }
 
-        //Some code copied from Stack's Exceptional. (Queuing aand Retrying)
-
+   
         private void DequeAndTryToWrite()
         {
             while (!errorQueue.IsEmpty)
@@ -237,7 +254,7 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type
         {
             StringBuilder innerExceptionText = new StringBuilder();
             var exception = ex;
-            innerExceptionText.Append(exception);
+            innerExceptionText.Append(exception.ToString());
             while (exception.InnerException != null)
             {
                 innerExceptionText.Append(exception.InnerException);
@@ -274,6 +291,19 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type
         public int ErrorHash { set; get; }
 
         public int DuplicateCount { set; get; }
+
+
+        /// <summary>
+        /// Gets a collection representing the headers sent with the request
+        /// </summary>
+        //  [ScriptIgnore]
+        [JsonIgnore]
+        public NameValueCollection RequestHeaders { get; set; }
+        public List<NameValuePair> RequestHeadersSerializable
+        {
+            get { return GetPairs(RequestHeaders); }
+            set { RequestHeaders = GetNameValueCollection(value); }
+        }
 
         public Dictionary<string, string> CustomData { get; set; }
 
@@ -317,5 +347,41 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type
             }
 
         }
+
+        private List<NameValuePair> GetPairs(NameValueCollection nvc)
+        {
+            var result = new List<NameValuePair>();
+            if (nvc == null) return null;
+
+            for (int i = 0; i < nvc.Count; i++)
+            {
+                result.Add(new NameValuePair { Name = nvc.GetKey(i), Value = nvc.Get(i) });
+            }
+            return result;
+        }
+        private NameValueCollection GetNameValueCollection(List<NameValuePair> pairs)
+        {
+            var result = new NameValueCollection();
+            if (pairs == null) return null;
+
+            foreach (var p in pairs)
+            {
+                result.Add(p.Name, p.Value);
+            }
+            return result;
+        }
+    }
+
+
+    public class NameValuePair
+    {
+        /// <summary>
+        /// The name for this variable
+        /// </summary>
+        public string Name { get; set; }
+        /// <summary>
+        /// The value for this variable
+        /// </summary>
+        public string Value { get; set; }
     }
 }
