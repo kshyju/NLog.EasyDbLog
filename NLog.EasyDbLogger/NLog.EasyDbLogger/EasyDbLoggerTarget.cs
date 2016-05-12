@@ -37,11 +37,12 @@ namespace NLog.EasyDbLogger
             {
                 ApplicationName = ApplicationName,
                 Type = logEvent.Level.Name,
-                Message = logEvent.Message,
+                Message = logEvent.FormattedMessage,
                 Detail = logEvent.FormattedMessage,
                 CreationDate = DateTime.UtcNow,
                 Guid = Guid.NewGuid(),
-                DuplicateCount = 1
+                DuplicateCount = 1,
+                Source= logEvent.LoggerName
             };
 
             var httpContext = HttpContext.Current;
@@ -57,17 +58,6 @@ namespace NLog.EasyDbLogger
 
 
                 SetContextProperties(httpContext,error);
-
-                //error.RequestHeaders = new NameValueCollection(req.Headers.Count);
-                //foreach (var header in req.Headers.AllKeys)
-                //{
-                //    // Cookies are handled above, no need to repeat
-                //    if (string.Compare(header, "Cookie", StringComparison.OrdinalIgnoreCase) == 0)
-                //        continue;
-
-                //    if (req.Headers[header] != null)
-                //        error.RequestHeaders[header] = req.Headers[header];
-                //}
 
             }
 
