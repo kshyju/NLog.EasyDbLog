@@ -7,9 +7,10 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
-using Newtonsoft.Json;
+
 using NLog.Config;
 using NLog.Targets;
+using System.Reflection;
 
 namespace NLog.EasyDbLogger
 {
@@ -42,7 +43,7 @@ namespace NLog.EasyDbLogger
                 CreationDate = DateTime.UtcNow,
                 Guid = Guid.NewGuid(),
                 DuplicateCount = 1,
-                Source= logEvent.LoggerName
+                Source = logEvent.LoggerName
             };
 
             var httpContext = HttpContext.Current;
@@ -57,7 +58,7 @@ namespace NLog.EasyDbLogger
                 error.Url = req.RawUrl;
 
 
-                SetContextProperties(httpContext,error);
+                SetContextProperties(httpContext, error);
 
             }
 
@@ -69,25 +70,49 @@ namespace NLog.EasyDbLogger
 
                 if (logEvent.Exception.Data.Values.Count > 0)
                 {
-                    Dictionary<string,string> customData=new Dictionary<string, string>();
+                    Dictionary<string, string> customData = new Dictionary<string, string>();
                     foreach (var data in logEvent.Exception.Data.Keys)
                     {
                         customData.Add(data.ToString(), logEvent.Exception.Data[data].ToString());
                     }
                     error.CustomData = customData;
                 }
-                
+
             }
 
             if (error.GetHash() != null)
             {
                 error.ErrorHash = error.GetHash().Value;
             }
-           
-            error.FullJson = JsonConvert.SerializeObject(error);
 
-           
+            try
+            {
 
+                Assembly assembly = Assembly.Load("Newtonsoft.Json");
+
+                var JsonConvertType = assembly.GetType("Newtonsoft.Json.JsonConvert");
+
+                var p = JsonConvertType.GetProperty("JsonIgnore");
+                
+                var metod = JsonConvertType.GetMethod("SerializeObject", new[] { typeof(object) });
+                //BindingFlags.Static | BindingFlags.Public);
+                if (metod != null)
+                {
+                    var a = new object[] { error };
+                    var res = metod.Invoke(null, a);
+                    if (res != null)
+                    {
+                        error.FullJson = (string) res;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var ss = ex.Message;
+                throw;
+            }
+
+            
             WriteToTable(error);
         }
 
@@ -95,7 +120,7 @@ namespace NLog.EasyDbLogger
         /// Sets Error properties pulled from HttpContext, if present
         /// </summary>
         /// <param name="context">The HttpContext related to the request</param>
-        private void SetContextProperties(HttpContext context,Error error)
+        private void SetContextProperties(HttpContext context, Error error)
         {
             if (context == null) return;
 
@@ -118,7 +143,7 @@ namespace NLog.EasyDbLogger
             error.ServerVariables = tryGetCollection(r => r.ServerVariables);
             error.QueryString = tryGetCollection(r => r.QueryString);
             error.Form = tryGetCollection(r => r.Form);
-           
+
 
             try
             {
@@ -126,7 +151,7 @@ namespace NLog.EasyDbLogger
                 for (var i = 0; i < request.Cookies.Count; i++)
                 {
                     var name = request.Cookies[i].Name;
-                    error.Cookies.Add(name,request.Cookies[i].Value);
+                    error.Cookies.Add(name, request.Cookies[i].Value);
                 }
             }
             catch (HttpRequestValidationException e)
@@ -225,7 +250,7 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type
             DequeAndTryToWrite();
         }
 
-   
+
         private void DequeAndTryToWrite()
         {
             while (!errorQueue.IsEmpty)
@@ -344,31 +369,51 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type
         /// Gets a collection representing the headers sent with the request
         /// </summary>
         //  [ScriptIgnore]
-        [JsonIgnore]
+        //  [JsonIgnore]
         public NameValueCollection RequestHeaders { get; set; }
 
 
-        [JsonIgnore]
+        //   [JsonIgnore]
         public NameValueCollection ServerVariables { get; set; }
 
         /// <summary>
         /// Gets the query string collection for the request
         /// </summary>
-        [JsonIgnore]
+      //  [JsonIgnore]
         public NameValueCollection QueryString { get; set; }
 
         /// <summary>
         /// Gets the form collection for the request
         /// </summary>
-        [JsonIgnore]
+    //    [JsonIgnore]
         public NameValueCollection Form { get; set; }
 
         /// <summary>
         /// Gets a collection representing the client cookies of the request
         /// </summary>
-        [JsonIgnore]
+       // [JsonIgnore]
         public NameValueCollection Cookies { get; set; }
 
+        public bool ShouldSerializeCookies()
+        {
+            return false;
+        }
+        public bool ShouldSerializeForm()
+        {
+            return false;
+        }
+        public bool ShouldSerializeQueryString()
+        {
+            return false;
+        }
+        public bool ShouldSerializeServerVariables()
+        {
+            return false;
+        }
+        public bool ShouldSerializeRequestHeaders()
+        {
+            return false;
+        }
         public List<NameValuePair> ServerVariablesSerializable
         {
             get { return GetPairs(ServerVariables); }

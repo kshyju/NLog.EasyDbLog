@@ -1,9 +1,6 @@
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\bin\Debug\NLog.EasyDbLogger.dll
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\bin\Debug\NLog.EasyDbLogger.pdb
-C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\bin\Debug\Newtonsoft.Json.dll
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\bin\Debug\NLog.dll
-C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\bin\Debug\Newtonsoft.Json.xml
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\bin\Debug\NLog.xml
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\obj\Debug\NLog.EasyDbLogger.dll
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\obj\Debug\NLog.EasyDbLogger.pdb
-C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\obj\Debug\NLog.EasyDbLogger.csprojResolveAssemblyReference.cache

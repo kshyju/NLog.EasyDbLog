@@ -1,8 +1,6 @@
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\bin\Release\NLog.EasyDbLogger.dll
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\bin\Release\NLog.EasyDbLogger.pdb
-C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\bin\Release\Newtonsoft.Json.dll
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\bin\Release\NLog.dll
-C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\bin\Release\Newtonsoft.Json.xml
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\bin\Release\NLog.xml
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\obj\Release\NLog.EasyDbLogger.dll
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\obj\Release\NLog.EasyDbLogger.pdb
