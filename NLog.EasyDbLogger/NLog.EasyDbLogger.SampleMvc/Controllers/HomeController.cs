@@ -4,14 +4,62 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace NLog.EasyDbLogger.SampleMvc.Controllers
 {
+
+    public class SomeClass
+    {
+        public string Name { set; get; }
+        public string PageNumber { set; get; }
+        public List<string> Items { set; get; }
+    }
     public class HomeController : Controller
     {
+        Logger logger = NLog.LogManager.GetCurrentClassLogger();
         public ActionResult Index()
         {
+
+           
+            logger.Info("Starting at  "+DateTime.Now.ToString());
+
+            var items = new List<int> {2,3};
+            Parallel.ForEach(items, (item) =>
+            {
+                DoIt(item);
+            });
+          
             return View();
+        }
+
+        [HttpPost]
+        public ActionResult PostTest(SomeClass test)
+        {
+            logger.Info("PostTest Starting at  " + DateTime.Now.ToString());
+
+            if (test != null)
+            {
+                
+            }
+            else if (test.Items.Any())
+            {
+                
+            }
+            return Json(test);
+        }
+
+    
+        public ActionResult GetTest(string firstName)
+        {
+            logger.Info("GetTest Starting at  " + DateTime.Now.ToString());
+
+            return Json(firstName);
+        }
+
+        private void DoIt(int id)
+        {
+            logger.Info("Now " +id+"-"+ DateTime.Now.ToString());
         }
 
         public ActionResult About()

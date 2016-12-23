@@ -202,6 +202,7 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type
                     System.Configuration.ConfigurationManager.ConnectionStrings[ConnectionStringName].ConnectionString as string;
                 using (var conn = new SqlConnection(connStr))
                 {
+                    var machineName = Environment.MachineName;
 
                     using (var cmd = new SqlCommand(q, conn))
                     {
@@ -211,17 +212,19 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type
                         cmd.Parameters.AddWithValue("@CreationDate", error.CreationDate);
                         cmd.Parameters.AddWithValue("@Type", error.Type.Truncate(100));
                         cmd.Parameters.AddWithValue("@IsProtected", false);
-                        cmd.Parameters.AddWithValue("@Host", error.Host.Truncate(100));
-                        cmd.Parameters.AddWithValue("@Url", error.Url.Truncate(500));
-                        cmd.Parameters.AddWithValue("@HTTPMethod", error.HTTPMethod);
-                        cmd.Parameters.AddWithValue("@IPAddress", error.IPAddress);
-                        cmd.Parameters.AddWithValue("@Source", error.Source);
+                        cmd.Parameters.AddWithValue("@Host",error.Host!=null?error.Host.Truncate(100):(object) DBNull.Value);
+                        cmd.Parameters.AddWithValue("@Url", error.Url!=null?error.Url.Truncate(500) : (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@HTTPMethod", (object) error.HTTPMethod ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@IPAddress", (object) error.IPAddress ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@Source", (object) error.Source ?? DBNull.Value);
                         cmd.Parameters.AddWithValue("@Message", error.Message.Truncate(1000));
                         cmd.Parameters.AddWithValue("@Detail", error.Detail);
                         cmd.Parameters.AddWithValue("@FullJson", error.FullJson);
                         cmd.Parameters.AddWithValue("@ErrorHash", error.ErrorHash);
                         cmd.Parameters.AddWithValue("@DuplicateCount", error.DuplicateCount);
                         cmd.Parameters.AddWithValue("@SQL", (object)error.SQL ?? DBNull.Value);
+
+                       
 
                         conn.Open();
                         cmd.ExecuteNonQuery();
@@ -241,6 +244,7 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type
             }
         }
 
+        
 
 
         private void AddToQueue(Error error)
@@ -319,7 +323,7 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type
         }
         public static string Truncate(this string s, int maxLength)
         {
-            return (String.IsNullOrEmpty(s) && s.Length > maxLength) ? s.Remove(maxLength) : s;
+            return (s.HasValue() && s.Length > maxLength) ? s.Remove(maxLength) : s;
         }
 
         public static string GetAllInnerExceptionsAsString(this Exception ex)
