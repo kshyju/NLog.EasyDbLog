@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>NLog.EasyDbLogger</id>
+    <version>1.0.0</version>
+    <title>NLog Adapter for easy database logging</title>
+    <authors>Shyju Krishnankutty</authors>
+    <owners>Shyju Krishnankutty</owners>   
+    <projectUrl>https://github.com/kshyju/NLog.EasyDbLog</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>This NLog adpater allows you to log your messages to database table with minimal configuration.</description>
+    <releaseNotes>Initial release</releaseNotes>
+    <copyright>Copyright 2016</copyright>
+    <tags>NLog Opserver Logging DataBaseLogging OpserverLogging DBLogging</tags>
+    <dependencies>
+      <dependency id="NLog" version="3.0.0" />
+    </dependencies>
+  </metadata>
+</package>

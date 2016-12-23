@@ -22,6 +22,13 @@ Change the ApplicationName value to whatever app you are working on.
 
  `<add name="NLogDb" connectionString="Server=Power123;Database=Exceptions;User ID=a;Password=b" providerName="System.Data.SqlClient" />`
 
+### Nuget
+
+I also published this as a nuget if you do not like manually dropping the assembly
+
+[https://www.nuget.org/packages/NLog.EasyDbLogger/](https://www.nuget.org/packages/NLog.EasyDbLogger/)
+
+
 ### Opserver compatability
 
 The reason for creating this target was to throw all the error messages (from NLog) to the Exceptions table so that opserver can display it.
