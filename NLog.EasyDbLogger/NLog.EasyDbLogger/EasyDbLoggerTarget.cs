@@ -77,13 +77,15 @@ namespace NLog.EasyDbLogger
                     }
                     error.CustomData = customData;
                 }
-
+                error.AddAdditionalSqlExceptionDetails(logEvent.Exception);
             }
 
             if (error.GetHash() != null)
             {
                 error.ErrorHash = error.GetHash().Value;
             }
+
+           
 
             try
             {
@@ -471,13 +473,27 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type
             return result;
         }
 
-        internal void AddFromData(Exception exception)
+        internal void AddAdditionalSqlExceptionDetails(Exception exception)
         {
             if (exception.Data == null) return;
 
             // Historical special case
             if (exception.Data.Contains("SQL"))
                 SQL = exception.Data["SQL"] as string;
+
+            //If the exception was thrown from Paralleized code, get inner exceptions and get the SQL from that
+            var aggregrateExceptions = exception as AggregateException;
+            if (aggregrateExceptions != null)
+            {
+                foreach (var innerException in aggregrateExceptions.InnerExceptions)
+                {
+                    var sql = innerException.Data["SQL"] as string;
+                    if (sql != null)
+                    {
+                        SQL = SQL + "FromParallelThread:" + innerException.Data["SQL"] as string;
+                    }
+                }
+            }
 
             var se = exception as SqlException;
             if (se != null)

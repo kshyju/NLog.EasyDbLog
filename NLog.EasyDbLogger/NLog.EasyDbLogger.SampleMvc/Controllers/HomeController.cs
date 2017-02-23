@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
+using NLog.Internal;
+using ConfigurationManager = System.Configuration.ConfigurationManager;
 
 namespace NLog.EasyDbLogger.SampleMvc.Controllers
 {
@@ -24,11 +27,18 @@ namespace NLog.EasyDbLogger.SampleMvc.Controllers
            
             logger.Info("Starting at  "+DateTime.Now.ToString());
 
-            var items = new List<int> {2,3};
-            Parallel.ForEach(items, (item) =>
+            try
             {
-                DoIt(item);
-            });
+                var items = new List<int> { 12, 13 };
+               // DoIt(12);
+                Parallel.ForEach(items, DoIt);
+            }
+            catch (Exception e)
+            {
+                logger.Fatal(e);
+                
+            }
+
           
             return View();
         }
@@ -60,6 +70,31 @@ namespace NLog.EasyDbLogger.SampleMvc.Controllers
         private void DoIt(int id)
         {
             logger.Info("Now " +id+"-"+ DateTime.Now.ToString());
+            var qry = "INSERT INTO Tags (Name) VALUE('" + id.ToString() + "');";
+            try
+            {
+                using (
+    var con =
+        new SqlConnection(
+            ConfigurationManager.ConnectionStrings["SchoolDBConnectionString"].ConnectionString))
+                {
+
+                  
+                    var cmd = new SqlCommand(qry, con);
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+
+                }
+            }
+            catch (Exception e)
+            {
+                e.Data["SQL"] = qry;
+                logger.Error(e);
+                throw;
+            }
+
+
+
         }
 
         public ActionResult About()
