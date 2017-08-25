@@ -37,7 +37,7 @@ namespace NLog.EasyDbLogger
             var error = new Error
             {
                 ApplicationName = ApplicationName,
-                Type = logEvent.Level.Name,
+                Category = logEvent.Level.Name,
                 Message = logEvent.FormattedMessage,
                 Detail = logEvent.FormattedMessage,
                 CreationDate = DateTime.UtcNow,
@@ -67,6 +67,7 @@ namespace NLog.EasyDbLogger
                 error.Source = logEvent.Exception.Source;
                 error.Message = logEvent.Exception.Message;
                 error.Detail = logEvent.Exception.GetAllInnerExceptionsAsString();
+                error.Type = logEvent.Exception.GetType().ToString();
 
                 if (logEvent.Exception.Data.Values.Count > 0)
                 {
@@ -194,9 +195,9 @@ namespace NLog.EasyDbLogger
                                                 Message,
                                                 Detail,
                                                 FullJson, 
-                                                ErrorHash, DuplicateCount,SQL)
+                                                ErrorHash, DuplicateCount,Category)
 Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type, @Host, @Url, @HTTPMethod, @IPAddress, @Source,
-@Message, @Detail,  @FullJson, @ErrorHash, @DuplicateCount,@SQL)";
+@Message, @Detail,  @FullJson, @ErrorHash, @DuplicateCount,@Category)";
 
 
 
@@ -212,7 +213,7 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type
                         cmd.Parameters.AddWithValue("@ApplicationName", error.ApplicationName.Truncate(50));
                         cmd.Parameters.AddWithValue("@MachineName", error.MachineName.Truncate(50));
                         cmd.Parameters.AddWithValue("@CreationDate", error.CreationDate);
-                        cmd.Parameters.AddWithValue("@Type", error.Type.Truncate(100));
+                        cmd.Parameters.AddWithValue("@Type", error.Type!=null?error.Type.Truncate(100):(object) string.Empty);
                         cmd.Parameters.AddWithValue("@IsProtected", false);
                         cmd.Parameters.AddWithValue("@Host",error.Host!=null?error.Host.Truncate(100):(object) DBNull.Value);
                         cmd.Parameters.AddWithValue("@Url", error.Url!=null?error.Url.Truncate(500) : (object)DBNull.Value);
@@ -224,7 +225,7 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type
                         cmd.Parameters.AddWithValue("@FullJson", error.FullJson);
                         cmd.Parameters.AddWithValue("@ErrorHash", error.ErrorHash);
                         cmd.Parameters.AddWithValue("@DuplicateCount", error.DuplicateCount);
-                        cmd.Parameters.AddWithValue("@SQL", (object)error.SQL ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@Category", error.Category);
 
                        
 
@@ -352,6 +353,9 @@ Values (@GUID, @ApplicationName, @MachineName, @CreationDate,@IsProtected, @Type
         public string MachineName => Environment.MachineName;
         public DateTime CreationDate { get; internal set; }
         public string Type { internal set; get; }
+
+        public string Category { internal set; get; }
+
         public string Host { internal set; get; }
         public string Url { internal set; get; }
         public string HTTPMethod { internal set; get; }

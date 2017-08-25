@@ -55,3 +55,4 @@ C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\bin\An
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\obj\Debug\NLog.EasyDbLogger.SampleMvc.csprojResolveAssemblyReference.cache
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\obj\Debug\NLog.EasyDbLogger.SampleMvc.dll
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\obj\Debug\NLog.EasyDbLogger.SampleMvc.pdb
+C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\obj\Debug\NLog.EasyDbLogger.SampleMvc.csproj.CoreCompileInputs.cache

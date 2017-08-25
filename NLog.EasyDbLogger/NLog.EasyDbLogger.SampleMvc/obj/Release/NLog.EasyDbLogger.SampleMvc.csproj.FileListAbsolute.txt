@@ -53,5 +53,6 @@ C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\bin\Sy
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\bin\System.Web.WebPages.Razor.xml
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\bin\Antlr3.Runtime.pdb
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\obj\Release\NLog.EasyDbLogger.SampleMvc.csprojResolveAssemblyReference.cache
+C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\obj\Release\NLog.EasyDbLogger.SampleMvc.csproj.CoreCompileInputs.cache
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\obj\Release\NLog.EasyDbLogger.SampleMvc.dll
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger.SampleMvc\obj\Release\NLog.EasyDbLogger.SampleMvc.pdb

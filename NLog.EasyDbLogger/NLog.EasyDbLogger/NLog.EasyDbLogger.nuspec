@@ -2,16 +2,16 @@
 <package >
   <metadata>
     <id>NLog.EasyDbLogger</id>
-    <version>1.0.0</version>
+    <version>1.1.2</version>
     <title>NLog Adapter for easy database logging</title>
     <authors>Shyju Krishnankutty</authors>
     <owners>Shyju Krishnankutty</owners>   
     <projectUrl>https://github.com/kshyju/NLog.EasyDbLog</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>This NLog adpater allows you to log your messages to database table with minimal configuration.</description>
-    <releaseNotes>Initial release</releaseNotes>
+    <description>This NLog adpater allows you to log your messages to database table with minimal configuration. See this link for instructions on how to use this https://github.com/kshyju/NLog.EasyDbLog#nlogeasydblog </description>
+    <releaseNotes>Fix to support handling of AggregateExceptions.</releaseNotes>
     <copyright>Copyright 2016</copyright>
-    <tags>NLog Opserver Logging DataBaseLogging OpserverLogging DBLogging</tags>
+    <tags>NLog Opserver Logging DataBaseLogging OpserverLogging DBLogging NLogDatabaseLogging</tags>
     <dependencies>
       <dependency id="NLog" version="3.0.0" />
     </dependencies>
