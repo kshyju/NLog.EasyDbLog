@@ -5,3 +5,4 @@ C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\bin\Release\NLog
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\obj\Release\NLog.EasyDbLogger.csproj.CoreCompileInputs.cache
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\obj\Release\NLog.EasyDbLogger.dll
 C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\obj\Release\NLog.EasyDbLogger.pdb
+C:\Shyju\OSS\NLog.EasyDbLog\NLog.EasyDbLogger\NLog.EasyDbLogger\obj\Release\NLog.EasyDbLogger.csprojResolveAssemblyReference.cache
